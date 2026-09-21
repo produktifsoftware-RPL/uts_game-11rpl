@@ -1,0 +1,1002 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Canvas Drag & Drop Game</title>
+
+  <!-- Bootstrap 5 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, #243b8f, transparent 35%),
+        radial-gradient(circle at bottom right, #7b2cbf, transparent 35%),
+        linear-gradient(135deg, #07111f, #111827);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .game-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+    }
+
+    .game-card {
+      width: 100%;
+      max-width: 1000px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 25px;
+      padding: 18px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 25px 70px rgba(0,0,0,0.45);
+    }
+
+    .game-title {
+      font-size: clamp(25px, 5vw, 42px);
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #b8c5d9;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-box {
+      background: rgba(255,255,255,0.08);
+      border-radius: 15px;
+      padding: 10px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #9caec7;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #07111f;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow:
+        inset 0 0 30px rgba(0,0,0,0.5),
+        0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    .btn-game {
+      border: none;
+      border-radius: 13px;
+      padding: 11px 20px;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-game:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #00e5ff, #0077ff);
+      color: white;
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #ff4d6d, #c9184a);
+      color: white;
+    }
+
+    .instruction {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.2);
+      color: #cbd5e1;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 576px) {
+      .game-wrapper {
+        padding: 8px;
+        align-items: flex-start;
+      }
+
+      .game-card {
+        padding: 12px;
+        border-radius: 18px;
+      }
+
+      .canvas-container {
+        border-radius: 14px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+      }
+
+      .btn-game {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="game-wrapper">
+
+  <div class="game-card">
+
+    <h1 class="game-title">🎯 Catch & Drop</h1>
+
+    <div class="subtitle">
+      Seret bola ke target menggunakan mouse atau jari
+    </div>
+
+    <!-- Statistik -->
+    <div class="row g-2">
+
+      <div class="col-4">
+        <div class="stat-box">
+          <div class="stat-label">SKOR</div>
+          <div class="stat-value" id="score">0</div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="stat-box">
+          <div class="stat-label">LEVEL</div>
+          <div class="stat-value" id="level">1</div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="stat-box">
+          <div class="stat-label">WAKTU</div>
+          <div class="stat-value">
+            <span id="time">60</span>s
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- Tombol -->
+    <div class="controls row g-2">
+
+      <div class="col-12 col-md-6">
+        <button
+          class="btn btn-game btn-start w-100"
+          onclick="startGame()">
+          ▶ Mulai Game
+        </button>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <button
+          class="btn btn-game btn-reset w-100"
+          onclick="resetGame()">
+          🔄 Reset
+        </button>
+      </div>
+
+    </div>
+
+    <div class="instruction">
+      👆 <b>HP:</b> sentuh dan seret bola ke lingkaran target.
+      &nbsp; | &nbsp;
+      🖱️ <b>PC:</b> klik lalu drag bola.
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let W = 900;
+let H = 520;
+
+canvas.width = W;
+canvas.height = H;
+
+let score = 0;
+let level = 1;
+let timeLeft = 60;
+
+let gameRunning = false;
+let dragging = false;
+
+let timer = null;
+
+const player = {
+  x: 150,
+  y: 260,
+  radius: 28,
+  targetX: 150,
+  targetY: 260,
+  color: "#00e5ff"
+};
+
+const target = {
+  x: 700,
+  y: 260,
+  radius: 55,
+  pulse: 0
+};
+
+let particles = [];
+
+
+// ===============================
+// RESPONSIVE CANVAS
+// ===============================
+
+function resizeCanvas() {
+
+  const maxWidth = Math.min(
+    canvas.parentElement.clientWidth,
+    900
+  );
+
+  const ratio = W / H;
+
+  canvas.style.width = maxWidth + "px";
+  canvas.style.height = (maxWidth / ratio) + "px";
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+
+// ===============================
+// UTILITIES
+// ===============================
+
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function distance(x1, y1, x2, y2) {
+
+  return Math.sqrt(
+    (x2 - x1) ** 2 +
+    (y2 - y1) ** 2
+  );
+}
+
+
+// ===============================
+// PARTICLES
+// ===============================
+
+function createParticles(x, y) {
+
+  for (let i = 0; i < 25; i++) {
+
+    particles.push({
+      x: x,
+      y: y,
+      vx: random(-4, 4),
+      vy: random(-4, 4),
+      life: 1,
+      size: random(3, 7)
+    });
+
+  }
+}
+
+
+function updateParticles() {
+
+  particles.forEach(p => {
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.vx *= 0.97;
+    p.vy *= 0.97;
+
+    p.life -= 0.025;
+
+  });
+
+  particles =
+    particles.filter(p => p.life > 0);
+}
+
+
+function drawParticles() {
+
+  particles.forEach(p => {
+
+    ctx.globalAlpha = p.life;
+
+    ctx.fillStyle = "#00e5ff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      p.x,
+      p.y,
+      p.size,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+  });
+
+  ctx.globalAlpha = 1;
+}
+
+
+// ===============================
+// BACKGROUND
+// ===============================
+
+function drawBackground() {
+
+  const gradient =
+    ctx.createLinearGradient(
+      0,
+      0,
+      W,
+      H
+    );
+
+  gradient.addColorStop(
+    0,
+    "#07111f"
+  );
+
+  gradient.addColorStop(
+    0.5,
+    "#101d35"
+  );
+
+  gradient.addColorStop(
+    1,
+    "#24104f"
+  );
+
+  ctx.fillStyle = gradient;
+
+  ctx.fillRect(
+    0,
+    0,
+    W,
+    H
+  );
+
+
+  // Grid
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,0.045)";
+
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x < W; x += 45) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+
+    ctx.stroke();
+
+  }
+
+  for (let y = 0; y < H; y += 45) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+
+    ctx.stroke();
+
+  }
+
+
+  // Decorative glow
+
+  const glow =
+    ctx.createRadialGradient(
+      W / 2,
+      H / 2,
+      50,
+      W / 2,
+      H / 2,
+      450
+    );
+
+  glow.addColorStop(
+    0,
+    "rgba(0,229,255,0.08)"
+  );
+
+  glow.addColorStop(
+    1,
+    "rgba(0,0,0,0)"
+  );
+
+  ctx.fillStyle = glow;
+
+  ctx.fillRect(
+    0,
+    0,
+    W,
+    H
+  );
+}
+
+
+// ===============================
+// DRAW TARGET
+// ===============================
+
+function drawTarget() {
+
+  target.pulse += 0.04;
+
+  const pulse =
+    Math.sin(target.pulse) * 5;
+
+  ctx.save();
+
+  ctx.shadowBlur = 30;
+
+  ctx.shadowColor = "#ff4ecd";
+
+  ctx.strokeStyle = "#ff4ecd";
+
+  ctx.lineWidth = 5;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    target.x,
+    target.y,
+    target.radius + pulse,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.stroke();
+
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "rgba(255,78,205,0.12)";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    target.x,
+    target.y,
+    target.radius - 8,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+
+  ctx.fillStyle = "#ffffff";
+
+  ctx.font = "bold 16px Arial";
+
+  ctx.textAlign = "center";
+
+  ctx.fillText(
+    "DROP",
+    target.x,
+    target.y + 6
+  );
+
+  ctx.restore();
+}
+
+
+// ===============================
+// DRAW PLAYER
+// ===============================
+
+function drawPlayer() {
+
+  ctx.save();
+
+  ctx.shadowBlur = 25;
+
+  ctx.shadowColor =
+    "#00e5ff";
+
+
+  const gradient =
+    ctx.createRadialGradient(
+      player.x - 10,
+      player.y - 10,
+      5,
+      player.x,
+      player.y,
+      player.radius
+    );
+
+  gradient.addColorStop(
+    0,
+    "#ffffff"
+  );
+
+  gradient.addColorStop(
+    0.2,
+    "#5ffaff"
+  );
+
+  gradient.addColorStop(
+    1,
+    "#0077ff"
+  );
+
+
+  ctx.fillStyle = gradient;
+
+  ctx.beginPath();
+
+  ctx.arc(
+    player.x,
+    player.y,
+    player.radius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle =
+    "rgba(255,255,255,0.7)";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    player.x - 9,
+    player.y - 9,
+    7,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.restore();
+}
+
+
+// ===============================
+// SMOOTH MOVEMENT
+// ===============================
+
+function updatePlayer() {
+
+  player.x +=
+    (player.targetX - player.x) * 0.18;
+
+  player.y +=
+    (player.targetY - player.y) * 0.18;
+}
+
+
+// ===============================
+// CHECK DROP
+// ===============================
+
+function checkDrop() {
+
+  const d =
+    distance(
+      player.x,
+      player.y,
+      target.x,
+      target.y
+    );
+
+  if (
+    d <
+    target.radius
+  ) {
+
+    score += 10 * level;
+
+    document.getElementById("score")
+      .textContent = score;
+
+    createParticles(
+      target.x,
+      target.y
+    );
+
+    level =
+      Math.floor(score / 50) + 1;
+
+    document.getElementById("level")
+      .textContent = level;
+
+    moveTarget();
+
+    player.targetX = random(
+      60,
+      W - 60
+    );
+
+    player.targetY = random(
+      60,
+      H - 60
+    );
+  }
+}
+
+
+// ===============================
+// MOVE TARGET
+// ===============================
+
+function moveTarget() {
+
+  target.x =
+    random(100, W - 100);
+
+  target.y =
+    random(100, H - 100);
+}
+
+
+// ===============================
+// POINTER CONTROL
+// ===============================
+
+function getPointerPosition(e) {
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+  let clientX;
+  let clientY;
+
+  if (e.touches) {
+
+    clientX =
+      e.touches[0].clientX;
+
+    clientY =
+      e.touches[0].clientY;
+
+  } else {
+
+    clientX =
+      e.clientX;
+
+    clientY =
+      e.clientY;
+  }
+
+
+  const scaleX =
+    W / rect.width;
+
+  const scaleY =
+    H / rect.height;
+
+
+  return {
+
+    x:
+      (clientX - rect.left)
+      * scaleX,
+
+    y:
+      (clientY - rect.top)
+      * scaleY
+
+  };
+}
+
+
+// ===============================
+// POINTER DOWN
+// ===============================
+
+function pointerDown(e) {
+
+  if (!gameRunning)
+    return;
+
+  const p =
+    getPointerPosition(e);
+
+  const d =
+    distance(
+      p.x,
+      p.y,
+      player.x,
+      player.y
+    );
+
+  if (
+    d <=
+    player.radius + 15
+  ) {
+
+    dragging = true;
+
+    player.targetX = p.x;
+    player.targetY = p.y;
+  }
+}
+
+
+// ===============================
+// POINTER MOVE
+// ===============================
+
+function pointerMove(e) {
+
+  if (!dragging)
+    return;
+
+  e.preventDefault();
+
+  const p =
+    getPointerPosition(e);
+
+  player.targetX =
+    Math.max(
+      player.radius,
+      Math.min(
+        W - player.radius,
+        p.x
+      )
+    );
+
+  player.targetY =
+    Math.max(
+      player.radius,
+      Math.min(
+        H - player.radius,
+        p.y
+      )
+    );
+}
+
+
+// ===============================
+// POINTER UP
+// ===============================
+
+function pointerUp() {
+
+  if (!dragging)
+    return;
+
+  dragging = false;
+
+  checkDrop();
+}
+
+
+// Mouse
+
+canvas.addEventListener(
+  "mousedown",
+  pointerDown
+);
+
+canvas.addEventListener(
+  "mousemove",
+  pointerMove
+);
+
+window.addEventListener(
+  "mouseup",
+  pointerUp
+);
+
+
+// Touch
+
+canvas.addEventListener(
+  "touchstart",
+  pointerDown,
+  { passive: false }
+);
+
+canvas.addEventListener(
+  "touchmove",
+  pointerMove,
+  { passive: false }
+);
+
+canvas.addEventListener(
+  "touchend",
+  pointerUp
+);
+
+
+// ===============================
+// START GAME
+// ===============================
+
+function startGame() {
+
+  if (gameRunning)
+    return;
+
+  gameRunning = true;
+
+  timeLeft = 60;
+
+  document.getElementById("time")
+    .textContent = timeLeft;
+
+
+  clearInterval(timer);
+
+  timer =
+    setInterval(() => {
+
+      timeLeft--;
+
+      document.getElementById("time")
+        .textContent =
+        timeLeft;
+
+      if (
+        timeLeft <= 0
+      ) {
+
+        gameRunning = false;
+
+        clearInterval(timer);
+
+        alert(
+          "Game selesai! Skor kamu: "
+          + score
+        );
+
+      }
+
+    }, 1000);
+}
+
+
+// ===============================
+// RESET GAME
+// ===============================
+
+function resetGame() {
+
+  clearInterval(timer);
+
+  score = 0;
+  level = 1;
+  timeLeft = 60;
+
+  gameRunning = false;
+  dragging = false;
+
+  player.x = 150;
+  player.y = 260;
+
+  player.targetX = 150;
+  player.targetY = 260;
+
+  target.x = 700;
+  target.y = 260;
+
+  particles = [];
+
+  document.getElementById("score")
+    .textContent = "0";
+
+  document.getElementById("level")
+    .textContent = "1";
+
+  document.getElementById("time")
+    .textContent = "60";
+}
+
+
+// ===============================
+// GAME LOOP
+// ===============================
+
+function gameLoop() {
+
+  drawBackground();
+
+  updatePlayer();
+
+  updateParticles();
+
+  drawTarget();
+
+  drawParticles();
+
+  drawPlayer();
+
+  requestAnimationFrame(
+    gameLoop
+  );
+}
+
+
+// Mulai animation loop
+gameLoop();
+
+</script>
+
+</body>
+</html>
+```
