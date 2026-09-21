@@ -1,0 +1,2683 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Neon Billiard Multiplayer 🎱</title>
+
+<link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+>
+
+<style>
+
+/* =====================================================
+   RESET
+===================================================== */
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    margin:0;
+}
+
+body{
+    overflow:hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    color:white;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #203b55,
+            #07111d 45%,
+            #020617 100%
+        );
+}
+
+
+/* =====================================================
+   MAIN WRAPPER
+===================================================== */
+
+.game-wrapper{
+
+    width:96%;
+    max-width:1500px;
+
+    height:94vh;
+
+    margin:3vh auto;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:14px;
+}
+
+
+/* =====================================================
+   TOP BAR
+===================================================== */
+
+.topbar{
+
+    min-height:75px;
+
+    padding:13px 25px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    border-radius:22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(30,41,59,.97),
+            rgba(2,6,23,.94)
+        );
+
+    border:1px solid
+        rgba(255,255,255,.1);
+
+    box-shadow:
+        0 15px 35px
+        rgba(0,0,0,.5),
+
+        inset 0 1px
+        rgba(255,255,255,.1);
+}
+
+
+.logo{
+
+    font-size:25px;
+
+    font-weight:900;
+
+    letter-spacing:2px;
+}
+
+.logo span{
+    color:#22c55e;
+}
+
+
+.turn-box{
+
+    display:flex;
+    align-items:center;
+
+    gap:20px;
+}
+
+
+.player-score{
+
+    min-width:100px;
+
+    text-align:center;
+}
+
+
+.player-label{
+
+    display:block;
+
+    font-size:10px;
+
+    opacity:.6;
+
+    letter-spacing:1px;
+}
+
+
+.score{
+
+    font-size:27px;
+
+    font-weight:900;
+}
+
+
+.score-p1{
+    color:#38bdf8;
+}
+
+.score-p2{
+    color:#fb7185;
+}
+
+
+.turn-indicator{
+
+    padding:9px 18px;
+
+    border-radius:14px;
+
+    background:
+        rgba(34,197,94,.12);
+
+    border:1px solid
+        rgba(34,197,94,.3);
+
+    color:#4ade80;
+
+    font-weight:bold;
+
+    font-size:13px;
+}
+
+
+/* =====================================================
+   GAME LAYOUT
+===================================================== */
+
+.game-layout{
+
+    flex:1;
+
+    min-height:0;
+
+    display:grid;
+
+    grid-template-columns:
+        210px
+        minmax(500px,1fr)
+        210px;
+
+    gap:14px;
+}
+
+
+/* =====================================================
+   PLAYER PANEL
+===================================================== */
+
+.player-panel{
+
+    padding:18px;
+
+    border-radius:22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(30,41,59,.96),
+            rgba(2,6,23,.96)
+        );
+
+    border:1px solid
+        rgba(255,255,255,.1);
+
+    box-shadow:
+        0 18px 35px
+        rgba(0,0,0,.5),
+
+        inset 0 1px
+        rgba(255,255,255,.08);
+}
+
+
+.player-title{
+
+    font-size:20px;
+
+    font-weight:900;
+
+    margin-bottom:4px;
+}
+
+
+.p1{
+    color:#38bdf8;
+}
+
+.p2{
+    color:#fb7185;
+}
+
+
+.player-subtitle{
+
+    font-size:10px;
+
+    opacity:.55;
+
+    margin-bottom:20px;
+}
+
+
+/* =====================================================
+   BALL DISPLAY
+===================================================== */
+
+.ball-list{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap:7px;
+
+    margin-top:10px;
+}
+
+
+.mini-ball{
+
+    width:30px;
+    height:30px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    border:2px solid
+        rgba(255,255,255,.4);
+
+    box-shadow:
+        inset -4px -5px 7px
+        rgba(0,0,0,.5),
+
+        0 4px 8px
+        rgba(0,0,0,.4);
+}
+
+
+.ball-yellow{
+    background:#facc15;
+}
+
+.ball-blue{
+    background:#2563eb;
+}
+
+.ball-red{
+    background:#ef4444;
+}
+
+.ball-purple{
+    background:#8b5cf6;
+}
+
+.ball-orange{
+    background:#f97316;
+}
+
+.ball-green{
+    background:#22c55e;
+
+}
+
+.ball-brown{
+    background:#92400e;
+}
+
+.ball-black{
+    background:#111827;
+}
+
+
+/* =====================================================
+   CONTROLS
+===================================================== */
+
+.control-title{
+
+    margin-top:25px;
+
+    margin-bottom:9px;
+
+    font-size:11px;
+
+    font-weight:bold;
+
+    opacity:.65;
+}
+
+
+.key{
+
+    display:inline-flex;
+
+    min-width:40px;
+    height:40px;
+
+    margin:3px;
+
+    justify-content:center;
+    align-items:center;
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #475569,
+            #111827
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    box-shadow:
+        3px 4px 8px
+        rgba(0,0,0,.6),
+
+        inset 0 1px
+        rgba(255,255,255,.15);
+
+    font-weight:bold;
+
+    font-size:12px;
+}
+
+
+.action{
+
+    margin-top:9px;
+
+    padding:10px;
+
+    border-radius:11px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    background:
+        rgba(255,255,255,.04);
+
+    font-size:11px;
+}
+
+
+.action-key{
+
+    padding:5px 9px;
+
+    border-radius:7px;
+
+    background:#1e293b;
+
+    box-shadow:
+        2px 2px 5px
+        rgba(0,0,0,.6);
+}
+
+
+/* =====================================================
+   TABLE AREA
+===================================================== */
+
+.table-area{
+
+    position:relative;
+
+    min-width:0;
+    min-height:0;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    border-radius:25px;
+
+    overflow:hidden;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(34,197,94,.08),
+            transparent 65%
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    box-shadow:
+        0 20px 55px
+        rgba(0,0,0,.7);
+}
+
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+canvas{
+
+    display:block;
+
+    width:100%;
+    height:100%;
+}
+
+
+/* =====================================================
+   POWER CONTROL
+===================================================== */
+
+.power-panel{
+
+    position:absolute;
+
+    bottom:16px;
+
+    left:50%;
+
+    transform:
+        translateX(-50%);
+
+    width:300px;
+
+    padding:10px 15px;
+
+    border-radius:15px;
+
+    background:
+        rgba(2,6,23,.8);
+
+    border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    backdrop-filter:
+        blur(8px);
+
+    z-index:5;
+}
+
+
+.power-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:11px;
+
+    margin-bottom:4px;
+}
+
+
+input[type="range"]{
+
+    width:100%;
+
+    accent-color:#22c55e;
+}
+
+
+/* =====================================================
+   AIM INFO
+===================================================== */
+
+.aim-info{
+
+    position:absolute;
+
+    top:15px;
+
+    left:50%;
+
+    transform:
+        translateX(-50%);
+
+    padding:7px 15px;
+
+    border-radius:20px;
+
+    background:
+        rgba(2,6,23,.7);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    font-size:11px;
+
+    opacity:.8;
+
+    pointer-events:none;
+}
+
+
+/* =====================================================
+   POPUP
+===================================================== */
+
+.overlay{
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:1000;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:center;
+
+    background:
+        rgba(2,6,23,.85);
+
+    backdrop-filter:
+        blur(12px);
+}
+
+
+.popup{
+
+    width:450px;
+
+    max-width:90%;
+
+    padding:35px;
+
+    text-align:center;
+
+    border-radius:28px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1e293b,
+            #020617
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.14);
+
+    box-shadow:
+        0 35px 90px
+        rgba(0,0,0,.8),
+
+        inset 0 1px
+        rgba(255,255,255,.1);
+
+    animation:
+        popupIn .45s ease;
+}
+
+
+@keyframes popupIn{
+
+    from{
+
+        opacity:0;
+
+        transform:
+            scale(.8)
+            translateY(25px);
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+            scale(1)
+            translateY(0);
+    }
+}
+
+
+.popup-icon{
+
+    font-size:60px;
+
+    margin-bottom:8px;
+}
+
+
+.popup h1{
+
+    font-size:30px;
+
+    font-weight:900;
+}
+
+
+.popup p{
+
+    line-height:1.7;
+
+    opacity:.7;
+}
+
+
+.start-btn{
+
+    width:100%;
+
+    padding:14px;
+
+    margin-top:14px;
+
+    border:0;
+
+    border-radius:14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #16a34a,
+            #22c55e
+        );
+
+    color:white;
+
+    font-size:17px;
+
+    font-weight:900;
+
+    box-shadow:
+        0 8px 25px
+        rgba(34,197,94,.35);
+
+    transition:.2s;
+}
+
+
+.start-btn:hover{
+
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        0 13px 35px
+        rgba(34,197,94,.55);
+}
+
+
+.hidden{
+    display:none !important;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:1050px){
+
+    body{
+        overflow:auto;
+    }
+
+    .game-wrapper{
+
+        height:auto;
+
+        min-height:100vh;
+    }
+
+
+    .game-layout{
+
+        grid-template-columns:1fr;
+    }
+
+
+    .table-area{
+
+        height:600px;
+    }
+
+
+    .player-panel{
+
+        min-height:230px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<div class="game-wrapper">
+
+
+    <!-- =================================================
+         HEADER
+    ================================================= -->
+
+    <header class="topbar">
+
+        <div class="logo">
+
+            🎱 NEON
+            <span>BILLIARD</span>
+
+        </div>
+
+
+        <div class="turn-box">
+
+            <div class="player-score">
+
+                <span class="player-label">
+                    PLAYER 1
+                </span>
+
+                <span
+                    id="score1"
+                    class="score score-p1">
+                    0
+                </span>
+
+            </div>
+
+
+            <div
+                id="turnIndicator"
+                class="turn-indicator">
+
+                🔵 Giliran P1
+
+            </div>
+
+
+            <div class="player-score">
+
+                <span class="player-label">
+                    PLAYER 2
+                </span>
+
+                <span
+                    id="score2"
+                    class="score score-p2">
+                    0
+                </span>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =================================================
+         GAME
+    ================================================= -->
+
+    <main class="game-layout">
+
+
+        <!-- =================================================
+             PLAYER 1
+        ================================================= -->
+
+        <aside class="player-panel">
+
+            <div class="player-title p1">
+
+                🔵 PLAYER 1
+
+            </div>
+
+            <div class="player-subtitle">
+
+                BLUE SHOOTER
+
+            </div>
+
+
+            <strong style="font-size:12px;">
+                Bola Anda
+            </strong>
+
+
+            <div class="ball-list">
+
+                <div class="mini-ball ball-yellow"></div>
+
+                <div class="mini-ball ball-blue"></div>
+
+                <div class="mini-ball ball-red"></div>
+
+                <div class="mini-ball ball-purple"></div>
+
+            </div>
+
+
+            <div class="control-title">
+
+                KONTROL
+
+            </div>
+
+
+            <div class="action">
+
+                AIM
+
+                <span class="action-key">
+                    MOUSE
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                POWER
+
+                <span class="action-key">
+                    SLIDER
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                SHOOT
+
+                <span class="action-key">
+                    SPACE
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                RESET AIM
+
+                <span class="action-key">
+                    R
+                </span>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =================================================
+             TABLE
+        ================================================= -->
+
+        <section class="table-area">
+
+            <canvas id="canvas"></canvas>
+
+
+            <div class="aim-info">
+
+                🖱️ Arahkan mouse ke target
+                • SPACE untuk memukul
+
+            </div>
+
+
+            <div class="power-panel">
+
+                <div class="power-top">
+
+                    <span>
+                        POWER TEMBAKAN
+                    </span>
+
+                    <b id="powerText">
+                        50%
+                    </b>
+
+                </div>
+
+
+                <input
+                    id="power"
+                    type="range"
+                    min="10"
+                    max="100"
+                    value="50"
+                >
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PLAYER 2
+        ================================================= -->
+
+        <aside class="player-panel">
+
+            <div class="player-title p2">
+
+                🔴 PLAYER 2
+
+            </div>
+
+            <div class="player-subtitle">
+
+                RED SHOOTER
+
+            </div>
+
+
+            <strong style="font-size:12px;">
+                Bola Anda
+            </strong>
+
+
+            <div class="ball-list">
+
+                <div class="mini-ball ball-orange"></div>
+
+                <div class="mini-ball ball-green"></div>
+
+                <div class="mini-ball ball-brown"></div>
+
+                <div class="mini-ball ball-black"></div>
+
+            </div>
+
+
+            <div class="control-title">
+
+                KONTROL
+
+            </div>
+
+
+            <div class="action">
+
+                AIM
+
+                <span class="action-key">
+                    MOUSE
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                POWER
+
+                <span class="action-key">
+                    SLIDER
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                SHOOT
+
+                <span class="action-key">
+                    SPACE
+                </span>
+
+            </div>
+
+
+            <div class="action">
+
+                RESET AIM
+
+                <span class="action-key">
+                    R
+                </span>
+
+            </div>
+
+        </aside>
+
+
+    </main>
+
+</div>
+
+
+<!-- =====================================================
+     START POPUP
+===================================================== -->
+
+<div
+    id="startPopup"
+    class="overlay">
+
+    <div class="popup">
+
+        <div class="popup-icon">
+            🎱
+        </div>
+
+        <h1>
+            NEON BILLIARD
+        </h1>
+
+        <p>
+
+            Multiplayer biliar 2 pemain.
+
+            Masukkan bola sebanyak mungkin
+            ke dalam lubang dan kumpulkan skor.
+
+        </p>
+
+
+        <p>
+
+            🖱️ Mouse =
+            arahkan stik
+
+            <br>
+
+            🎚️ Slider =
+            kekuatan pukulan
+
+            <br>
+
+            SPACE =
+            pukul bola
+
+        </p>
+
+
+        <button
+            class="start-btn"
+            onclick="startGame()">
+
+            🎱 MULAI BILLIARD
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     GAME OVER
+===================================================== -->
+
+<div
+    id="gameOverPopup"
+    class="overlay hidden">
+
+    <div class="popup">
+
+        <div
+            id="winnerIcon"
+            class="popup-icon">
+
+            🏆
+
+        </div>
+
+
+        <h1 id="winnerTitle">
+
+            GAME OVER
+
+        </h1>
+
+
+        <p id="winnerDescription">
+
+            Pertandingan selesai.
+
+        </p>
+
+
+        <button
+            class="start-btn"
+            onclick="restartGame()">
+
+            🔄 MAIN LAGI
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+
+function resizeCanvas(){
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    canvas.width =
+        Math.max(
+            600,
+            rect.width
+        );
+
+    canvas.height =
+        Math.max(
+            400,
+            rect.height
+        );
+
+    createTable();
+
+}
+
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+
+/* =====================================================
+   GAME VARIABLES
+===================================================== */
+
+let running = false;
+
+let balls = [];
+
+let holes = [];
+
+let currentPlayer = 1;
+
+let score1 = 0;
+
+let score2 = 0;
+
+let aiming = true;
+
+let mouseX = 0;
+
+let mouseY = 0;
+
+let lastTime = 0;
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+const TABLE_PADDING = 65;
+
+let table = {};
+
+
+/* =====================================================
+   CREATE TABLE
+===================================================== */
+
+function createTable(){
+
+    table = {
+
+        left:TABLE_PADDING,
+
+        right:
+            canvas.width -
+            TABLE_PADDING,
+
+        top:TABLE_PADDING,
+
+        bottom:
+            canvas.height -
+            TABLE_PADDING
+
+    };
+
+
+    createHoles();
+
+}
+
+
+/* =====================================================
+   HOLES
+===================================================== */
+
+function createHoles(){
+
+    const r = 24;
+
+    holes = [
+
+        {
+            x:table.left,
+            y:table.top,
+            r:r
+        },
+
+        {
+            x:canvas.width/2,
+            y:table.top-2,
+            r:r
+        },
+
+        {
+            x:table.right,
+            y:table.top,
+            r:r
+        },
+
+        {
+            x:table.left,
+            y:table.bottom,
+            r:r
+        },
+
+        {
+            x:canvas.width/2,
+            y:table.bottom+2,
+            r:r
+        },
+
+        {
+            x:table.right,
+            y:table.bottom,
+            r:r
+        }
+
+    ];
+
+}
+
+
+/* =====================================================
+   BALL CLASS
+===================================================== */
+
+class Ball{
+
+    constructor(
+        x,
+        y,
+        color,
+        number,
+        type="normal"
+    ){
+
+        this.x=x;
+
+        this.y=y;
+
+        this.vx=0;
+
+        this.vy=0;
+
+        this.radius=13;
+
+        this.color=color;
+
+        this.number=number;
+
+        this.type=type;
+
+        this.active=true;
+
+    }
+
+
+    moving(){
+
+        return Math.abs(this.vx)>5 ||
+               Math.abs(this.vy)>5;
+
+    }
+
+
+    update(dt){
+
+        this.x +=
+            this.vx * dt;
+
+        this.y +=
+            this.vy * dt;
+
+
+        /* FRICTION */
+
+        const friction =
+            Math.pow(.985,dt*60);
+
+        this.vx *= friction;
+
+        this.vy *= friction;
+
+
+        if(
+            Math.abs(this.vx)<2
+        )
+            this.vx=0;
+
+
+        if(
+            Math.abs(this.vy)<2
+        )
+            this.vy=0;
+
+
+        /* WALL */
+
+        if(
+            this.x-this.radius <
+            table.left
+        ){
+
+            this.x =
+                table.left+
+                this.radius;
+
+            this.vx =
+                Math.abs(this.vx)*.92;
+
+        }
+
+
+        if(
+            this.x+this.radius >
+            table.right
+        ){
+
+            this.x =
+                table.right-
+                this.radius;
+
+            this.vx =
+                -Math.abs(this.vx)*.92;
+
+        }
+
+
+        if(
+            this.y-this.radius <
+            table.top
+        ){
+
+            this.y =
+                table.top+
+                this.radius;
+
+            this.vy =
+                Math.abs(this.vy)*.92;
+
+        }
+
+
+        if(
+            this.y+this.radius >
+            table.bottom
+        ){
+
+            this.y =
+                table.bottom-
+                this.radius;
+
+            this.vy =
+                -Math.abs(this.vy)*.92;
+
+        }
+
+    }
+
+
+    draw(){
+
+        ctx.save();
+
+
+        /* GLOW */
+
+        ctx.shadowColor =
+            this.color;
+
+        ctx.shadowBlur =
+            12;
+
+
+        /* BALL */
+
+        ctx.beginPath();
+
+        ctx.arc(
+            this.x,
+            this.y,
+            this.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle =
+            this.color;
+
+        ctx.fill();
+
+
+        /* HIGHLIGHT */
+
+        ctx.shadowBlur=0;
+
+        const gradient =
+            ctx.createRadialGradient(
+                this.x-4,
+                this.y-5,
+                1,
+                this.x,
+                this.y,
+                this.radius
+            );
+
+        gradient.addColorStop(
+            0,
+            "rgba(255,255,255,.8)"
+        );
+
+        gradient.addColorStop(
+            .2,
+            "rgba(255,255,255,.15)"
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(0,0,0,.35)"
+        );
+
+
+        ctx.fillStyle =
+            gradient;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            this.x,
+            this.y,
+            this.radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        /* NUMBER */
+
+        if(
+            this.number !== null
+        ){
+
+            ctx.fillStyle =
+                "#111";
+
+            ctx.font =
+                "bold 8px Arial";
+
+            ctx.textAlign =
+                "center";
+
+            ctx.textBaseline =
+                "middle";
+
+            ctx.fillText(
+                this.number,
+                this.x,
+                this.y
+            );
+
+        }
+
+
+        ctx.restore();
+
+    }
+
+}
+
+
+/* =====================================================
+   CREATE BALLS
+===================================================== */
+
+function createBalls(){
+
+    balls=[];
+
+
+    /* CUE BALL */
+
+    balls.push(
+
+        new Ball(
+            table.left +
+            (table.right-table.left)*.25,
+
+            canvas.height/2,
+
+            "#ffffff",
+
+            null,
+
+            "cue"
+        )
+
+    );
+
+
+    const colors=[
+
+        "#facc15",
+        "#2563eb",
+        "#ef4444",
+        "#8b5cf6",
+        "#f97316",
+        "#22c55e",
+        "#92400e",
+        "#111827"
+
+    ];
+
+
+    const startX =
+        table.left +
+        (table.right-table.left)*.70;
+
+
+    const startY =
+        canvas.height/2;
+
+
+    let number=1;
+
+
+    /* TRIANGLE */
+
+    for(
+        let row=0;
+        row<3;
+        row++
+    ){
+
+        for(
+            let col=0;
+            col<=row;
+            col++
+        ){
+
+            const x =
+                startX +
+                row*27;
+
+            const y =
+                startY +
+                (col-row/2)*28;
+
+
+            balls.push(
+
+                new Ball(
+                    x,
+                    y,
+                    colors[
+                        (number-1) %
+                        colors.length
+                    ],
+                    number
+                )
+
+            );
+
+            number++;
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   DRAW TABLE
+===================================================== */
+
+function drawTable(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* BACKGROUND */
+
+    const bg =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            canvas.height
+        );
+
+    bg.addColorStop(
+        0,
+        "#07111d"
+    );
+
+    bg.addColorStop(
+        1,
+        "#020617"
+    );
+
+
+    ctx.fillStyle =
+        bg;
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    /* WOOD FRAME */
+
+    ctx.fillStyle =
+        "#422006";
+
+    ctx.shadowColor =
+        "rgba(0,0,0,.8)";
+
+    ctx.shadowBlur=30;
+
+    ctx.fillRect(
+        table.left-35,
+        table.top-35,
+        table.right-table.left+70,
+        table.bottom-table.top+70
+    );
+
+
+    ctx.shadowBlur=0;
+
+
+    /* WOOD HIGHLIGHT */
+
+    ctx.strokeStyle =
+        "#a16207";
+
+    ctx.lineWidth=7;
+
+    ctx.strokeRect(
+        table.left-28,
+        table.top-28,
+        table.right-table.left+56,
+        table.bottom-table.top+56
+    );
+
+
+    /* FELT */
+
+    const felt =
+        ctx.createLinearGradient(
+            0,
+            table.top,
+            0,
+            table.bottom
+        );
+
+    felt.addColorStop(
+        0,
+        "#166534"
+    );
+
+    felt.addColorStop(
+        .5,
+        "#15803d"
+    );
+
+    felt.addColorStop(
+        1,
+        "#14532d"
+    );
+
+
+    ctx.fillStyle =
+        felt;
+
+    ctx.fillRect(
+        table.left,
+        table.top,
+        table.right-table.left,
+        table.bottom-table.top
+    );
+
+
+    /* FELT GRID */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.025)";
+
+    ctx.lineWidth=1;
+
+
+    for(
+        let x=table.left;
+        x<table.right;
+        x+=40
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            table.top
+        );
+
+        ctx.lineTo(
+            x,
+            table.bottom
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    for(
+        let y=table.top;
+        y<table.bottom;
+        y+=40
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            table.left,
+            y
+        );
+
+        ctx.lineTo(
+            table.right,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* HOLES */
+
+    for(const hole of holes){
+
+        ctx.beginPath();
+
+        ctx.arc(
+            hole.x,
+            hole.y,
+            hole.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fillStyle =
+            "#020617";
+
+        ctx.shadowColor =
+            "#000";
+
+        ctx.shadowBlur=12;
+
+        ctx.fill();
+
+        ctx.shadowBlur=0;
+
+    }
+
+}
+
+
+/* =====================================================
+   COLLISION
+===================================================== */
+
+function resolveBallCollision(a,b){
+
+    if(
+        !a.active ||
+        !b.active
+    )
+        return;
+
+
+    const dx =
+        b.x-a.x;
+
+    const dy =
+        b.y-a.y;
+
+    const distance =
+        Math.hypot(dx,dy);
+
+    const minDistance =
+        a.radius+b.radius;
+
+
+    if(
+        distance <= 0 ||
+        distance >= minDistance
+    )
+        return;
+
+
+    const nx =
+        dx/distance;
+
+    const ny =
+        dy/distance;
+
+
+    const overlap =
+        minDistance-distance;
+
+
+    a.x -=
+        nx*overlap/2;
+
+    a.y -=
+        ny*overlap/2;
+
+    b.x +=
+        nx*overlap/2;
+
+    b.y +=
+        ny*overlap/2;
+
+
+    const relativeVelocity =
+        (a.vx-b.vx)*nx +
+        (a.vy-b.vy)*ny;
+
+
+    if(
+        relativeVelocity < 0
+    )
+        return;
+
+
+    const impulse =
+        relativeVelocity;
+
+
+    a.vx -=
+        impulse*nx;
+
+    a.vy -=
+        impulse*ny;
+
+    b.vx +=
+        impulse*nx;
+
+    b.vy +=
+        impulse*ny;
+
+}
+
+
+/* =====================================================
+   HOLE CHECK
+===================================================== */
+
+function checkHoles(){
+
+    for(const ball of balls){
+
+        if(
+            !ball.active
+        )
+            continue;
+
+
+        for(const hole of holes){
+
+            const distance =
+                Math.hypot(
+                    ball.x-hole.x,
+                    ball.y-hole.y
+                );
+
+
+            if(
+                distance <
+                hole.r-4
+            ){
+
+                ball.active=false;
+
+                ball.vx=0;
+
+                ball.vy=0;
+
+
+                if(
+                    ball.type === "cue"
+                ){
+
+                    setTimeout(
+                        respawnCue,
+                        700
+                    );
+
+                }
+                else{
+
+                    if(
+                        currentPlayer===1
+                    ){
+
+                        score1++;
+
+                    }
+                    else{
+
+                        score2++;
+
+                    }
+
+
+                    updateUI();
+
+                }
+
+                break;
+
+            }
+
+        }
+
+    }
+
+
+    balls =
+        balls.filter(
+            ball =>
+                ball.active
+        );
+
+
+    checkEndGame();
+
+}
+
+
+/* =====================================================
+   CUE RESPAWN
+===================================================== */
+
+function respawnCue(){
+
+    const cue =
+        new Ball(
+            table.left +
+            (table.right-table.left)*.25,
+
+            canvas.height/2,
+
+            "#ffffff",
+
+            null,
+
+            "cue"
+        );
+
+
+    balls.unshift(cue);
+
+}
+
+
+/* =====================================================
+   ALL BALLS STOP?
+===================================================== */
+
+function allBallsStopped(){
+
+    return balls.every(
+        ball =>
+            !ball.moving()
+    );
+
+}
+
+
+/* =====================================================
+   SHOOT
+===================================================== */
+
+function shoot(){
+
+    if(
+        !running
+    )
+        return;
+
+
+    if(
+        !allBallsStopped()
+    )
+        return;
+
+
+    const cue =
+        balls.find(
+            ball =>
+                ball.type==="cue"
+        );
+
+
+    if(!cue)
+        return;
+
+
+    const dx =
+        mouseX-cue.x;
+
+    const dy =
+        mouseY-cue.y;
+
+    const distance =
+        Math.hypot(dx,dy);
+
+
+    if(distance < 5)
+        return;
+
+
+    const power =
+        Number(
+            document.getElementById(
+                "power"
+            ).value
+        );
+
+
+    const force =
+        power*10;
+
+
+    cue.vx =
+        (dx/distance)*force;
+
+    cue.vy =
+        (dy/distance)*force;
+
+
+    /* SWITCH TURN */
+
+    setTimeout(
+        switchTurnWhenStopped,
+        500
+    );
+
+}
+
+
+/* =====================================================
+   TURN
+===================================================== */
+
+function switchTurnWhenStopped(){
+
+    const check =
+        setInterval(
+            ()=>{
+
+                if(
+                    allBallsStopped()
+                ){
+
+                    clearInterval(
+                        check
+                    );
+
+                    currentPlayer =
+                        currentPlayer===1
+                        ? 2
+                        : 1;
+
+                    updateUI();
+
+                }
+
+            },
+            100
+        );
+
+}
+
+
+/* =====================================================
+   MOUSE AIM
+===================================================== */
+
+canvas.addEventListener(
+    "mousemove",
+    function(e){
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const scaleX =
+            canvas.width /
+            rect.width;
+
+        const scaleY =
+            canvas.height /
+            rect.height;
+
+
+        mouseX =
+            (e.clientX-rect.left) *
+            scaleX;
+
+        mouseY =
+            (e.clientY-rect.top) *
+            scaleY;
+
+    }
+);
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
+
+window.addEventListener(
+    "keydown",
+    function(e){
+
+        if(
+            e.code==="Space"
+        ){
+
+            e.preventDefault();
+
+            shoot();
+
+        }
+
+
+        if(
+            e.key.toLowerCase()==="r"
+        ){
+
+            const cue =
+                balls.find(
+                    ball =>
+                        ball.type==="cue"
+                );
+
+
+            if(cue){
+
+                mouseX =
+                    cue.x+150;
+
+                mouseY =
+                    cue.y;
+
+            }
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   POWER TEXT
+===================================================== */
+
+const power =
+    document.getElementById(
+        "power"
+    );
+
+
+power.addEventListener(
+    "input",
+    function(){
+
+        document.getElementById(
+            "powerText"
+        ).textContent =
+            this.value+"%";
+
+    }
+);
+
+
+/* =====================================================
+   DRAW AIM
+===================================================== */
+
+function drawAim(){
+
+    const cue =
+        balls.find(
+            ball =>
+                ball.type==="cue"
+        );
+
+
+    if(
+        !cue ||
+        !allBallsStopped()
+    )
+        return;
+
+
+    const dx =
+        mouseX-cue.x;
+
+    const dy =
+        mouseY-cue.y;
+
+    const distance =
+        Math.hypot(dx,dy);
+
+
+    if(
+        distance<5
+    )
+        return;
+
+
+    const nx =
+        dx/distance;
+
+    const ny =
+        dy/distance;
+
+
+    ctx.save();
+
+    ctx.setLineDash([
+        7,
+        8
+    ]);
+
+    ctx.strokeStyle =
+        currentPlayer===1
+        ? "rgba(56,189,248,.7)"
+        : "rgba(251,113,133,.7)";
+
+    ctx.lineWidth=2;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        cue.x,
+        cue.y
+    );
+
+    ctx.lineTo(
+        cue.x+nx*180,
+        cue.y+ny*180
+    );
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
+
+
+    /* CUE STICK */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.65)";
+
+    ctx.lineWidth=5;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        cue.x-nx*80,
+        cue.y-ny*80
+    );
+
+    ctx.lineTo(
+        cue.x-nx*25,
+        cue.y-ny*25
+    );
+
+    ctx.stroke();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   GAME LOOP
+===================================================== */
+
+function gameLoop(time){
+
+    if(
+        !running
+    )
+        return;
+
+
+    const dt =
+        Math.min(
+            (time-lastTime)/1000,
+            .025
+        );
+
+
+    lastTime=time;
+
+
+    drawTable();
+
+
+    /* UPDATE */
+
+    for(const ball of balls){
+
+        ball.update(dt);
+
+    }
+
+
+    /* COLLISIONS */
+
+    for(
+        let i=0;
+        i<balls.length;
+        i++
+    ){
+
+        for(
+            let j=i+1;
+            j<balls.length;
+            j++
+        ){
+
+            resolveBallCollision(
+                balls[i],
+                balls[j]
+            );
+
+        }
+
+    }
+
+
+    checkHoles();
+
+
+    drawAim();
+
+
+    /* BALLS */
+
+    for(const ball of balls){
+
+        ball.draw();
+
+    }
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function updateUI(){
+
+    document.getElementById(
+        "score1"
+    ).textContent =
+        score1;
+
+
+    document.getElementById(
+        "score2"
+    ).textContent =
+        score2;
+
+
+    document.getElementById(
+        "turnIndicator"
+    ).textContent =
+        currentPlayer===1
+        ? "🔵 Giliran P1"
+        : "🔴 Giliran P2";
+
+}
+
+
+/* =====================================================
+   END GAME
+===================================================== */
+
+function checkEndGame(){
+
+    const remaining =
+        balls.filter(
+            ball =>
+                ball.type!=="cue"
+        );
+
+
+    if(
+        remaining.length===0
+    ){
+
+        finishGame();
+
+    }
+
+}
+
+
+/* =====================================================
+   START GAME
+===================================================== */
+
+function startGame(){
+
+    document
+        .getElementById(
+            "startPopup"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+
+    document
+        .getElementById(
+            "gameOverPopup"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+
+    score1=0;
+
+    score2=0;
+
+    currentPlayer=1;
+
+    running=true;
+
+
+    createTable();
+
+    createBalls();
+
+    updateUI();
+
+
+    lastTime =
+        performance.now();
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =====================================================
+   GAME OVER
+===================================================== */
+
+function finishGame(){
+
+    running=false;
+
+
+    let title;
+    let icon;
+
+
+    if(
+        score1>score2
+    ){
+
+        title =
+            "PLAYER 1 MENANG!";
+
+        icon="🔵";
+
+    }
+    else if(
+        score2>score1
+    ){
+
+        title =
+            "PLAYER 2 MENANG!";
+
+        icon="🔴";
+
+    }
+    else{
+
+        title =
+            "HASIL IMBANG!";
+
+        icon="🤝";
+
+    }
+
+
+    document.getElementById(
+        "winnerIcon"
+    ).textContent =
+        icon;
+
+
+    document.getElementById(
+        "winnerTitle"
+    ).textContent =
+        title;
+
+
+    document.getElementById(
+        "winnerDescription"
+    ).textContent =
+        `Skor akhir:
+         Player 1 ${score1}
+         — Player 2 ${score2}`;
+
+
+    document
+        .getElementById(
+            "gameOverPopup"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+}
+
+
+/* =====================================================
+   RESTART
+===================================================== */
+
+function restartGame(){
+
+    startGame();
+
+}
+
+
+/* =====================================================
+   INITIAL
+===================================================== */
+
+resizeCanvas();
+
+drawTable();
+
+</script>
+
+</body>
+</html>
+```
