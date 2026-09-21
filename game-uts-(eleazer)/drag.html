@@ -1,0 +1,1092 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Drag & Drop Canvas Game</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, #334155, transparent 35%),
+                radial-gradient(circle at bottom right, #312e81, transparent 40%),
+                #020617;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-card {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(15, 23, 42, .88);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 25px 70px rgba(0,0,0,.45);
+            backdrop-filter: blur(15px);
+        }
+
+        .game-title {
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .game-subtitle {
+            color: #94a3b8;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,.06);
+            border-radius: 15px;
+            padding: 10px 15px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #0f172a;
+            box-shadow: inset 0 0 40px rgba(0,0,0,.4);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        .game-info {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 15px;
+            background: rgba(255,255,255,.05);
+            color: #cbd5e1;
+        }
+
+        .btn-game {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            font-weight: bold;
+            transition: .25s ease;
+        }
+
+        .btn-game:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #818cf8;
+            color: white;
+        }
+
+        .progress {
+            height: 8px;
+            background: rgba(255,255,255,.1);
+            border-radius: 20px;
+        }
+
+        .progress-bar {
+            transition: width .4s ease;
+        }
+
+        @media (max-width: 576px) {
+            .game-wrapper {
+                padding: 10px;
+            }
+
+            .game-card {
+                padding: 12px;
+                border-radius: 18px;
+            }
+
+            .game-title {
+                font-size: 22px;
+            }
+
+            .stat-box {
+                min-width: 80px;
+                padding: 8px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .game-info {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="game-wrapper">
+
+    <div class="game-card">
+
+        <!-- HEADER -->
+        <div class="row align-items-center g-3">
+
+            <div class="col-12 col-md">
+                <h1 class="game-title mb-1">
+                    🎯 Drag & Drop
+                </h1>
+
+                <div class="game-subtitle">
+                    Masukkan semua bentuk ke tempat yang sesuai
+                </div>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <div class="d-flex gap-2 justify-content-center">
+
+                    <div class="stat-box">
+                        <div class="stat-label">SKOR</div>
+                        <div id="score" class="stat-value">0</div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-label">LEVEL</div>
+                        <div id="level" class="stat-value">1</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- PROGRESS -->
+        <div class="mt-3">
+
+            <div class="d-flex justify-content-between mb-2">
+                <small>Progress</small>
+                <small id="progressText">0 / 4</small>
+            </div>
+
+            <div class="progress">
+                <div
+                    id="progressBar"
+                    class="progress-bar bg-success"
+                    style="width:0%">
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- CANVAS -->
+        <div class="canvas-container">
+
+            <canvas id="gameCanvas"
+                    width="1000"
+                    height="600">
+            </canvas>
+
+        </div>
+
+
+        <!-- INFO -->
+        <div class="game-info text-center">
+
+            <div class="mb-2">
+                🖱️ Desktop: klik dan tarik bentuk
+                <br class="d-sm-none">
+                📱 HP: sentuh lalu geser bentuk
+            </div>
+
+            <button
+                id="resetBtn"
+                class="btn btn-game btn-reset">
+                🔄 Mulai Ulang
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const scoreElement = document.getElementById("score");
+const levelElement = document.getElementById("level");
+const progressText = document.getElementById("progressText");
+const progressBar = document.getElementById("progressBar");
+const resetBtn = document.getElementById("resetBtn");
+
+
+/* =====================================================
+   GAME DATA
+===================================================== */
+
+let score = 0;
+let level = 1;
+
+let shapes = [];
+
+let selectedShape = null;
+
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+let particles = [];
+
+let completed = 0;
+
+const totalShapes = 4;
+
+
+/* =====================================================
+   WARNA
+===================================================== */
+
+const colors = [
+    "#6366f1",
+    "#ec4899",
+    "#22c55e",
+    "#f59e0b"
+];
+
+
+/* =====================================================
+   CREATE SHAPES
+===================================================== */
+
+function createGame() {
+
+    score = 0;
+    level = 1;
+    completed = 0;
+
+    shapes = [];
+    particles = [];
+
+    for(let i = 0; i < totalShapes; i++) {
+
+        const size = 45;
+
+        shapes.push({
+
+            id: i,
+
+            x: 120 + i * 180,
+            y: 470,
+
+            startX: 120 + i * 180,
+            startY: 470,
+
+            targetX: 130 + i * 240,
+            targetY: 140,
+
+            size: size,
+
+            color: colors[i],
+
+            dragging: false,
+
+            placed: false,
+
+            rotation: 0,
+
+            targetRotation: 0,
+
+            scale: 1,
+
+            targetScale: 1
+
+        });
+
+    }
+
+    updateUI();
+
+}
+
+
+/* =====================================================
+   DRAW BACKGROUND
+===================================================== */
+
+function drawBackground() {
+
+    const gradient = ctx.createLinearGradient(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    gradient.addColorStop(0, "#0f172a");
+    gradient.addColorStop(1, "#1e1b4b");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    // Grid
+
+    ctx.strokeStyle = "rgba(255,255,255,.04)";
+    ctx.lineWidth = 1;
+
+    for(let x = 0; x < canvas.width; x += 50) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+
+        ctx.stroke();
+
+    }
+
+    for(let y = 0; y < canvas.height; y += 50) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =====================================================
+   DRAW TARGET
+===================================================== */
+
+function drawTarget(shape) {
+
+    ctx.save();
+
+    ctx.translate(
+        shape.targetX,
+        shape.targetY
+    );
+
+    ctx.rotate(shape.targetRotation);
+
+    ctx.globalAlpha = .25;
+
+    ctx.strokeStyle = shape.color;
+
+    ctx.lineWidth = 5;
+
+    ctx.setLineDash([10, 8]);
+
+
+    if(shape.id === 0) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            0,
+            shape.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.stroke();
+
+    }
+
+    else if(shape.id === 1) {
+
+        ctx.strokeRect(
+            -shape.size,
+            -shape.size,
+            shape.size * 2,
+            shape.size * 2
+        );
+
+    }
+
+    else if(shape.id === 2) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            -shape.size
+        );
+
+        ctx.lineTo(
+            shape.size,
+            shape.size
+        );
+
+        ctx.lineTo(
+            -shape.size,
+            shape.size
+        );
+
+        ctx.closePath();
+
+        ctx.stroke();
+
+    }
+
+    else {
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, -shape.size);
+
+        ctx.lineTo(shape.size, 0);
+
+        ctx.lineTo(0, shape.size);
+
+        ctx.lineTo(-shape.size, 0);
+
+        ctx.closePath();
+
+        ctx.stroke();
+
+    }
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   DRAW SHAPE
+===================================================== */
+
+function drawShape(shape) {
+
+    ctx.save();
+
+    ctx.translate(
+        shape.x,
+        shape.y
+    );
+
+    ctx.rotate(shape.rotation);
+
+    ctx.scale(
+        shape.scale,
+        shape.scale
+    );
+
+
+    ctx.shadowColor = shape.color;
+    ctx.shadowBlur = shape.dragging ? 30 : 15;
+
+    ctx.fillStyle = shape.color;
+
+    ctx.strokeStyle = "rgba(255,255,255,.7)";
+
+    ctx.lineWidth = 3;
+
+
+    if(shape.id === 0) {
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            0,
+            shape.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+        ctx.stroke();
+
+    }
+
+    else if(shape.id === 1) {
+
+        ctx.fillRect(
+            -shape.size,
+            -shape.size,
+            shape.size * 2,
+            shape.size * 2
+        );
+
+        ctx.strokeRect(
+            -shape.size,
+            -shape.size,
+            shape.size * 2,
+            shape.size * 2
+        );
+
+    }
+
+    else if(shape.id === 2) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            -shape.size
+        );
+
+        ctx.lineTo(
+            shape.size,
+            shape.size
+        );
+
+        ctx.lineTo(
+            -shape.size,
+            shape.size
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+
+    }
+
+    else {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            -shape.size
+        );
+
+        ctx.lineTo(
+            shape.size,
+            0
+        );
+
+        ctx.lineTo(
+            0,
+            shape.size
+        );
+
+        ctx.lineTo(
+            -shape.size,
+            0
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+        ctx.stroke();
+
+    }
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   PARTICLES
+===================================================== */
+
+function createParticles(x, y, color) {
+
+    for(let i = 0; i < 25; i++) {
+
+        particles.push({
+
+            x: x,
+            y: y,
+
+            vx: (Math.random() - .5) * 8,
+            vy: (Math.random() - .5) * 8,
+
+            life: 1,
+
+            color: color,
+
+            size: Math.random() * 5 + 2
+
+        });
+
+    }
+
+}
+
+
+function updateParticles() {
+
+    for(let i = particles.length - 1; i >= 0; i--) {
+
+        const p = particles[i];
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        p.life -= .025;
+
+        if(p.life <= 0) {
+
+            particles.splice(i, 1);
+
+        }
+
+    }
+
+}
+
+
+function drawParticles() {
+
+    particles.forEach(p => {
+
+        ctx.globalAlpha = p.life;
+
+        ctx.fillStyle = p.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+    });
+
+    ctx.globalAlpha = 1;
+
+}
+
+
+/* =====================================================
+   MOUSE / TOUCH POSITION
+===================================================== */
+
+function getPointerPosition(e) {
+
+    const rect = canvas.getBoundingClientRect();
+
+    let clientX;
+    let clientY;
+
+    if(e.touches) {
+
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+
+    } else {
+
+        clientX = e.clientX;
+        clientY = e.clientY;
+
+    }
+
+
+    return {
+
+        x:
+            (clientX - rect.left)
+            * (canvas.width / rect.width),
+
+        y:
+            (clientY - rect.top)
+            * (canvas.height / rect.height)
+
+    };
+
+}
+
+
+/* =====================================================
+   SELECT SHAPE
+===================================================== */
+
+function selectShape(e) {
+
+    const pos = getPointerPosition(e);
+
+    for(let i = shapes.length - 1; i >= 0; i--) {
+
+        const shape = shapes[i];
+
+        if(shape.placed)
+            continue;
+
+
+        const distance = Math.sqrt(
+
+            Math.pow(pos.x - shape.x, 2) +
+
+            Math.pow(pos.y - shape.y, 2)
+
+        );
+
+
+        if(distance < shape.size + 15) {
+
+            selectedShape = shape;
+
+            shape.dragging = true;
+
+            dragOffsetX =
+                pos.x - shape.x;
+
+            dragOffsetY =
+                pos.y - shape.y;
+
+            break;
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   DRAG
+===================================================== */
+
+function dragShape(e) {
+
+    if(!selectedShape)
+        return;
+
+    e.preventDefault();
+
+    const pos = getPointerPosition(e);
+
+    selectedShape.x =
+        pos.x - dragOffsetX;
+
+    selectedShape.y =
+        pos.y - dragOffsetY;
+
+}
+
+
+/* =====================================================
+   DROP
+===================================================== */
+
+function dropShape() {
+
+    if(!selectedShape)
+        return;
+
+
+    const shape = selectedShape;
+
+    shape.dragging = false;
+
+
+    const distance = Math.sqrt(
+
+        Math.pow(
+            shape.x - shape.targetX,
+            2
+        ) +
+
+        Math.pow(
+            shape.y - shape.targetY,
+            2
+        )
+
+    );
+
+
+    if(distance < 75) {
+
+        shape.placed = true;
+
+        shape.x = shape.targetX;
+        shape.y = shape.targetY;
+
+        shape.targetScale = 1.2;
+
+        completed++;
+
+        score += 100;
+
+        createParticles(
+            shape.x,
+            shape.y,
+            shape.color
+        );
+
+        updateUI();
+
+
+        if(completed === totalShapes) {
+
+            level++;
+
+            setTimeout(() => {
+
+                alert(
+                    "🎉 Hebat!\nSemua bentuk berhasil ditempatkan!"
+                );
+
+            }, 200);
+
+        }
+
+    }
+
+    else {
+
+        // Kembali ke posisi awal secara smooth
+
+        shape.targetXMove = shape.startX;
+        shape.targetYMove = shape.startY;
+
+        shape.returning = true;
+
+    }
+
+
+    selectedShape = null;
+
+}
+
+
+/* =====================================================
+   SMOOTH ANIMATION
+===================================================== */
+
+function updateShapes() {
+
+    shapes.forEach(shape => {
+
+        if(shape.returning && !shape.dragging) {
+
+            shape.x +=
+                (shape.startX - shape.x) * .15;
+
+            shape.y +=
+                (shape.startY - shape.y) * .15;
+
+
+            if(
+
+                Math.abs(shape.x - shape.startX) < 1 &&
+
+                Math.abs(shape.y - shape.startY) < 1
+
+            ) {
+
+                shape.x = shape.startX;
+                shape.y = shape.startY;
+
+                shape.returning = false;
+
+            }
+
+        }
+
+
+        shape.scale +=
+            (shape.targetScale - shape.scale) * .15;
+
+
+        if(Math.abs(
+            shape.scale - shape.targetScale
+        ) < .01) {
+
+            shape.targetScale = 1;
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function updateUI() {
+
+    scoreElement.textContent = score;
+
+    levelElement.textContent = level;
+
+    progressText.textContent =
+        `${completed} / ${totalShapes}`;
+
+    progressBar.style.width =
+        `${(completed / totalShapes) * 100}%`;
+
+}
+
+
+/* =====================================================
+   GAME LOOP
+===================================================== */
+
+function gameLoop() {
+
+    drawBackground();
+
+
+    shapes.forEach(shape => {
+
+        if(!shape.placed) {
+
+            drawTarget(shape);
+
+        }
+
+    });
+
+
+    updateShapes();
+
+
+    shapes.forEach(shape => {
+
+        drawShape(shape);
+
+    });
+
+
+    updateParticles();
+
+    drawParticles();
+
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =====================================================
+   EVENTS
+===================================================== */
+
+// Mouse
+
+canvas.addEventListener(
+    "mousedown",
+    selectShape
+);
+
+canvas.addEventListener(
+    "mousemove",
+    dragShape
+);
+
+canvas.addEventListener(
+    "mouseup",
+    dropShape
+);
+
+canvas.addEventListener(
+    "mouseleave",
+    dropShape
+);
+
+
+// Touch
+
+canvas.addEventListener(
+    "touchstart",
+    selectShape,
+    { passive: false }
+);
+
+canvas.addEventListener(
+    "touchmove",
+    dragShape,
+    { passive: false }
+);
+
+canvas.addEventListener(
+    "touchend",
+    dropShape
+);
+
+
+// Reset
+
+resetBtn.addEventListener(
+    "click",
+    createGame
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+createGame();
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
+```
