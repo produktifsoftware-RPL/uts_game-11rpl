@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Sepak Bola Multiplayer Smooth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #222;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+        #scoreboard {
+            display: flex;
+            gap: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 30px;
+            border-radius: 20px;
+            border: 2px solid #555;
+        }
+        .p1-score { color: #3498db; }
+        .p2-score { color: #e74c3c; }
+        canvas {
+            background-color: #27ae60;
+            border: 5px solid #fff;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #controls {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #aaa;
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scoreboard">
+        <span class="p1-score">Pemain 1 (Biru): <span id="score1">0</span></span>
+        <span class="p2-score">Pemain 2 (Merah): <span id="score2">0</span></span>
+    </div>
+
+    <canvas id="gameCanvas" width="1000" height="550"></canvas>
+
+    <div id="controls">
+        <strong>Kontrol Pemain:</strong><br>
+        ⚽ Pemain 1 (Kiri): Bergerak dengan <strong>W, A, S, D</strong><br>
+        ⚽ Pemain 2 (Kanan): Bergerak dengan <strong>Tombol Panah (Arrow Keys)</strong>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const score1El = document.getElementById("score1");
+        const score2El = document.getElementById("score2");
+
+        // Skor
+        let score1 = 0;
+        let score2 = 0;
+
+        // Kontrol Input Keyboard
+        const keys = {};
+
+        window.addEventListener("keydown", (e) => { keys[e.key] = true; });
+        window.addEventListener("keyup", (e) => { keys[e.key] = false; });
+
+        // Objek Pemain 1 (Biru)
+        const p1 = {
+            x: 150,
+            y: canvas.height / 2,
+            radius: 22,
+            speed: 5,
+            color: "#3498db"
+        };
+
+        // Objek Pemain 2 (Merah)
+        const p2 = {
+            x: canvas.width - 150,
+            y: canvas.height / 2,
+            radius: 22,
+            speed: 5,
+            color: "#e74c3c"
+        };
+
+        // Objek Bola
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 12,
+            vx: 0,
+            vy: 0,
+            speed: 0,
+            friction: 0.98, // Membuat bola melambat perlahan (efek gesekan rumput)
+            color: "#ffffff"
+        };
+
+        // Konfigurasi Gawang
+        const goalHeight = 140;
+        const goalY = (canvas.height - goalHeight) / 2;
+
+        // Reset Posisi Setelah Gol
+        function resetPositions() {
+            p1.x = 150;
+            p1.y = canvas.height / 2;
+            p2.x = canvas.width - 150;
+            p2.y = canvas.height / 2;
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.vx = 0;
+            ball.vy = 0;
+        }
+
+        // Deteksi Tabrakan (Lingkaran dengan Lingkaran) untuk Bola & Pemain
+        function handleCollision(player) {
+            let dx = ball.x - player.x;
+            let dy = ball.y - player.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            let minDistance = ball.radius + player.radius;
+
+            if (distance < minDistance) {
+                // Dorong bola keluar dari radius badan pemain agar tidak tumpang tindih
+                let overlap = minDistance - distance;
+                let nx = dx / distance;
+                let ny = dy / distance;
+
+                ball.x += nx * overlap;
+                ball.y += ny * overlap;
+
+                // Transfer momentum kecepatan ke bola agar melesat mulus
+                ball.vx = nx * player.speed * 1.5;
+                ball.vy = ny * player.speed * 1.5;
+            }
+        }
+
+        // Update Logika Game secara Berkala
+        function update() {
+            // Pergerakan Pemain 1 (W, A, S, D)
+            if (keys["w"] || keys["W"]) p1.y -= p1.speed;
+            if (keys["s"] || keys["S"]) p1.y += p1.speed;
+            if (keys["a"] || keys["A"]) p1.x -= p1.speed;
+            if (keys["d"] || keys["D"]) p1.x += p1.speed;
+
+            // Pergerakan Pemain 2 (Arrow Keys)
+            if (keys["ArrowUp"]) p2.y -= p2.speed;
+            if (keys["ArrowDown"]) p2.y += p2.speed;
+            if (keys["ArrowLeft"]) p2.x -= p2.speed;
+            if (keys["ArrowRight"]) p2.x += p2.speed;
+
+            // Batasi Pemain agar tidak keluar lapangan kiri/kanan/atas/bawah
+            [p1, p2].forEach(p => {
+                if (p.x < p.radius) p.x = p.radius;
+                if (p.x > canvas.width - p.radius) p.x = canvas.width - p.radius;
+                if (p.y < p.radius) p.y = p.radius;
+                if (p.y > canvas.height - p.radius) p.y = canvas.height - p.radius;
+            });
+
+            // Pergerakan Bola dengan Fisika Gesekan (Friction)
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+            ball.vx *= ball.friction;
+            ball.vy *= ball.friction;
+
+            // Deteksi Tabrakan Pemain dengan Bola
+            handleCollision(p1);
+            handleCollision(p2);
+
+            // Pantulan Bola di Tembok Atas dan Bawah
+            if (ball.y - ball.radius < 0) {
+                ball.y = ball.radius;
+                ball.vy = -ball.vy;
+            }
+            if (ball.y + ball.radius > canvas.height) {
+                ball.y = canvas.height - ball.radius;
+                ball.vy = -ball.vy;
+            }
+
+            // Logika Gol atau Pantulan Tembok Kiri & Kanan
+            // Lapangan Kiri
+            if (ball.x - ball.radius < 0) {
+                if (ball.y > goalY && ball.y < goalY + goalHeight) {
+                    score2++;
+                    score2El.innerText = score2;
+                    resetPositions();
+                } else {
+                    ball.x = ball.radius;
+                    ball.vx = -ball.vx;
+                }
+            }
+            // Lapangan Kanan
+            if (ball.x + ball.radius > canvas.width) {
+                if (ball.y > goalY && ball.y < goalY + goalHeight) {
+                    score1++;
+                    score1El.innerText = score1;
+                    resetPositions();
+                } else {
+                    ball.x = canvas.width - ball.radius;
+                    ball.vx = -ball.vx;
+                }
+            }
+        }
+
+        // Menggambar Semua Elemen Visual ke Canvas
+        function draw() {
+            // Bersihkan Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Gambar Garis Lapangan (Visual Lapangan Hijau)
+            ctx.strokeStyle = "rgba(255,255,255,0.6)";
+            ctx.lineWidth = 4;
+            // Garis Tengah
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            // Lingkaran Tengah
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 80, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 2. Gambar Gawang Kiri & Kanan
+            ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.fillRect(0, goalY, 15, goalHeight);
+            ctx.fillRect(canvas.width - 15, goalY, 15, goalHeight);
+            
+            ctx.strokeStyle = "#fff";
+            ctx.strokeRect(0, goalY, 15, goalHeight);
+            ctx.strokeRect(canvas.width - 15, goalY, 15, goalHeight);
+
+            // 3. Gambar Pemain 1
+            ctx.beginPath();
+            ctx.arc(p1.x, p1.y, p1.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p1.color;
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 4. Gambar Pemain 2
+            ctx.beginPath();
+            ctx.arc(p2.x, p2.y, p2.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p2.color;
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 5. Gambar Bola
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Siklus Utama Game (Looping Smooth)
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Mulai Game
+        gameLoop();
+    </script>
+</body>
+</html>
