@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Drag & Drop Edukasi</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+transition:1s;
+overflow:hidden;
+}
+
+.container{
+width:95%;
+max-width:1200px;
+background:rgba(255,255,255,.15);
+backdrop-filter:blur(10px);
+padding:20px;
+border-radius:25px;
+box-shadow:0 10px 40px rgba(0,0,0,.25);
+color:white;
+}
+
+h1{
+text-align:center;
+margin-bottom:10px;
+}
+
+.info{
+display:flex;
+justify-content:space-between;
+margin-bottom:20px;
+font-size:20px;
+font-weight:bold;
+}
+
+.game{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.column{
+background:rgba(255,255,255,.1);
+padding:15px;
+border-radius:20px;
+min-height:450px;
+}
+
+.column h2{
+text-align:center;
+margin-bottom:15px;
+}
+
+.item{
+padding:12px;
+margin:10px 0;
+border-radius:15px;
+cursor:grab;
+font-weight:bold;
+text-align:center;
+background:white;
+color:#333;
+transition:.3s;
+}
+
+.item:hover{
+transform:scale(1.05);
+}
+
+.target{
+padding:12px;
+margin:10px 0;
+border-radius:15px;
+min-height:55px;
+border:3px dashed white;
+display:flex;
+justify-content:center;
+align-items:center;
+font-weight:bold;
+transition:.3s;
+}
+
+.correct{
+animation:correctAnim .7s;
+background:#00e676 !important;
+}
+
+.wrong{
+animation:wrongAnim .7s;
+background:#ff1744 !important;
+}
+
+@keyframes correctAnim{
+0%{transform:scale(1);}
+50%{transform:scale(1.2) rotate(5deg);}
+100%{transform:scale(1);}
+}
+
+@keyframes wrongAnim{
+0%{transform:translateX(0);}
+25%{transform:translateX(-10px);}
+50%{transform:translateX(10px);}
+75%{transform:translateX(-10px);}
+100%{transform:translateX(0);}
+}
+
+.win{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:70px;
+font-weight:bold;
+color:white;
+animation:pop 1s forwards;
+pointer-events:none;
+}
+
+@keyframes pop{
+0%{transform:translate(-50%,-50%) scale(0);}
+100%{transform:translate(-50%,-50%) scale(1.5);opacity:0;}
+}
+
+@media(max-width:900px){
+.game{
+grid-template-columns:1fr;
+}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>🎮 Game Drag & Drop Edukasi</h1>
+
+<div class="info">
+<div>Level: <span id="level">1</span></div>
+<div>Kategori: <span id="kategori"></span></div>
+<div>Skor: <span id="score">0</span></div>
+</div>
+
+<div class="game">
+
+<div class="column">
+<h2>Drag Item</h2>
+<div id="items"></div>
+</div>
+
+<div class="column">
+<h2>Drop ke Jawaban Benar</h2>
+<div id="targets"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const levels = [
+
+{
+kategori:"Buah",
+data:{
+"🍎":"Apel",
+"🍌":"Pisang",
+"🍇":"Anggur",
+"🍊":"Jeruk"
+}
+},
+
+{
+kategori:"Warna",
+data:{
+"🔴":"Merah",
+"🟢":"Hijau",
+"🔵":"Biru",
+"🟡":"Kuning"
+}
+},
+
+{
+kategori:"Hewan",
+data:{
+"🦁":"Singa",
+"🐘":"Gajah",
+"🐯":"Harimau",
+"🐵":"Monyet"
+}
+},
+
+{
+kategori:"Bunga",
+data:{
+"🌹":"Mawar",
+"🌻":"Matahari",
+"🌷":"Tulip",
+"🌼":"Daisy"
+}
+},
+
+{
+kategori:"Kota",
+data:{
+"Jakarta":"Indonesia",
+"Tokyo":"Jepang",
+"Paris":"Prancis",
+"London":"Inggris"
+}
+},
+
+{
+kategori:"Negara",
+data:{
+"🇮🇩":"Indonesia",
+"🇯🇵":"Jepang",
+"🇫🇷":"Prancis",
+"🇺🇸":"Amerika"
+}
+},
+
+{
+kategori:"Olahraga",
+data:{
+"⚽":"Sepak Bola",
+"🏀":"Basket",
+"🏸":"Badminton",
+"🎾":"Tenis"
+}
+},
+
+{
+kategori:"Makanan",
+data:{
+"🍕":"Pizza",
+"🍔":"Burger",
+"🍜":"Ramen",
+"🌭":"Hotdog"
+}
+},
+
+{
+kategori:"Barang",
+data:{
+"💻":"Laptop",
+"📱":"HP",
+"⌚":"Jam",
+"🖨️":"Printer"
+}
+},
+
+{
+kategori:"Makanan Daerah",
+data:{
+"Rendang":"Sumbar",
+"Pempek":"Palembang",
+"Gudeg":"Yogyakarta",
+"Papeda":"Papua"
+}
+},
+
+{
+kategori:"Planet",
+data:{
+"Merkurius":"Planet 1",
+"Venus":"Planet 2",
+"Bumi":"Planet 3",
+"Mars":"Planet 4"
+}
+},
+
+{
+kategori:"Provinsi",
+data:{
+"Aceh":"Banda Aceh",
+"Jawa Barat":"Bandung",
+"Sumut":"Medan",
+"Bali":"Denpasar"
+}
+}
+
+];
+
+const colors=[
+"linear-gradient(135deg,#ff6b6b,#feca57)",
+"linear-gradient(135deg,#5f27cd,#48dbfb)",
+"linear-gradient(135deg,#00d2d3,#54a0ff)",
+"linear-gradient(135deg,#ff9ff3,#f368e0)",
+"linear-gradient(135deg,#10ac84,#1dd1a1)",
+"linear-gradient(135deg,#ee5253,#ff9f43)",
+"linear-gradient(135deg,#341f97,#5f27cd)",
+"linear-gradient(135deg,#2e86de,#54a0ff)",
+"linear-gradient(135deg,#ff7675,#fd79a8)",
+"linear-gradient(135deg,#00b894,#55efc4)",
+"linear-gradient(135deg,#6c5ce7,#a29bfe)",
+"linear-gradient(135deg,#e17055,#fab1a0)"
+];
+
+let level=0;
+let score=0;
+let matched=0;
+
+function beep(freq,time){
+
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+
+const osc=ctx.createOscillator();
+const gain=ctx.createGain();
+
+osc.connect(gain);
+gain.connect(ctx.destination);
+
+osc.frequency.value=freq;
+
+osc.start();
+
+gain.gain.setValueAtTime(.2,ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+time);
+
+osc.stop(ctx.currentTime+time);
+
+}
+
+function showAnim(text){
+
+const div=document.createElement("div");
+div.className="win";
+div.innerHTML=text;
+
+document.body.appendChild(div);
+
+setTimeout(()=>div.remove(),1000);
+
+}
+
+function shuffle(a){
+return a.sort(()=>Math.random()-0.5);
+}
+
+function loadLevel(){
+
+if(level>=levels.length){
+
+showAnim("🏆 GAME SELESAI");
+
+beep(800,.2);
+beep(1000,.2);
+beep(1200,.4);
+
+setTimeout(()=>{
+level=0;
+score=0;
+loadLevel();
+},3000);
+
+return;
+}
+
+document.body.style.background=colors[level%colors.length];
+
+matched=0;
+
+document.getElementById("level").textContent=level+1;
+document.getElementById("score").textContent=score;
+document.getElementById("kategori").textContent=levels[level].kategori;
+
+const items=document.getElementById("items");
+const targets=document.getElementById("targets");
+
+items.innerHTML="";
+targets.innerHTML="";
+
+const entries=Object.entries(levels[level].data);
+
+shuffle([...entries]).forEach(([k,v])=>{
+
+const div=document.createElement("div");
+div.className="item";
+div.textContent=k;
+div.draggable=true;
+div.dataset.answer=v;
+
+div.addEventListener("dragstart",e=>{
+e.dataTransfer.setData("text",v);
+});
+
+items.appendChild(div);
+
+});
+
+shuffle([...entries]).forEach(([k,v])=>{
+
+const target=document.createElement("div");
+target.className="target";
+target.textContent=v;
+
+target.addEventListener("dragover",e=>{
+e.preventDefault();
+});
+
+target.addEventListener("drop",e=>{
+
+e.preventDefault();
+
+const answer=e.dataTransfer.getData("text");
+
+if(answer===v){
+
+target.classList.add("correct");
+target.textContent="✅ "+v;
+
+beep(700,.15);
+
+score+=10;
+matched++;
+
+document.getElementById("score").textContent=score;
+
+const all=document.querySelectorAll(".item");
+
+all.forEach(i=>{
+if(i.dataset.answer===v){
+i.style.display="none";
+}
+});
+
+if(matched===entries.length){
+
+showAnim("🎉 LEVEL UP!");
+
+beep(900,.2);
+beep(1200,.2);
+
+setTimeout(()=>{
+level++;
+loadLevel();
+},1500);
+
+}
+
+}else{
+
+target.classList.add("wrong");
+
+beep(200,.3);
+
+showAnim("❌");
+
+setTimeout(()=>{
+target.classList.remove("wrong");
+},500);
+
+}
+
+});
+
+targets.appendChild(target);
+
+});
+
+}
+
+loadLevel();
+
+</script>
+
+</body>
+</html>
