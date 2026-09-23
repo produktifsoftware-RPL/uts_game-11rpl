@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ludo King - Compact Fit Edition</title>
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+:root {
+    --red: #ef4444;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --blue: #3b82f6;
+    --bg-gradient: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 100%);
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-gradient);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-container {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    max-width: 520px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.logo span { color: #facc15; }
+
+.turn-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.board-wrap {
+    width: min(92vw, 55vh, 400px);
+    height: min(92vw, 55vh, 400px);
+    position: relative;
+    padding: 5px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ffffff, #cbd5e1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+.board {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+/* Home Areas */
+.home {
+    position: absolute;
+    width: 40%;
+    height: 40%;
+    padding: 7%;
+}
+
+.home.red { top: 0; left: 0; background: linear-gradient(135deg, #ff5252, #dc2626); }
+.home.green { top: 0; right: 0; background: linear-gradient(135deg, #4ade80, #16a34a); }
+.home.yellow { bottom: 0; right: 0; background: linear-gradient(135deg, #facc15, #ca8a04); }
+.home.blue { bottom: 0; left: 0; background: linear-gradient(135deg, #60a5fa, #2563eb); }
+
+.home-box {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 14%;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    padding: 10%;
+    gap: 15%;
+}
+
+.home-spot {
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+/* Center Zone */
+.center {
+    position: absolute;
+    width: 20%;
+    height: 20%;
+    top: 40%;
+    left: 40%;
+    background: conic-gradient(
+        var(--green) 0deg 90deg,
+        var(--yellow) 90deg 180deg,
+        var(--blue) 180deg 270deg,
+        var(--red) 270deg 360deg
+    );
+    z-index: 3;
+}
+
+.center-inner {
+    position: absolute;
+    inset: 15%;
+    background: #ffffff;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* Grid & Cells */
+.cells {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.cell {
+    border: 0.5px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.6rem;
+}
+
+.cell.red { background: #ef4444; }
+.cell.green { background: #22c55e; }
+.cell.yellow { background: #eab308; }
+.cell.blue { background: #3b82f6; }
+.cell.safe::after { content: '★'; color: rgba(255, 255, 255, 0.85); font-size: 0.65rem; }
+
+.token {
+    position: absolute;
+    width: 6.2%;
+    height: 6.2%;
+    border-radius: 50%;
+    z-index: 10;
+    cursor: pointer;
+    transition: left 0.25s cubic-bezier(0.25, 1, 0.5, 1), top 0.25s cubic-bezier(0.25, 1, 0.5, 1), transform 0.15s ease;
+    box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.8), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.token::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.65);
+}
+
+.token.red { background: radial-gradient(circle at 35% 35%, #ff6b6b, #b91c1c); }
+.token.green { background: radial-gradient(circle at 35% 35%, #4ade80, #15803d); }
+.token.yellow { background: radial-gradient(circle at 35% 35%, #fde047, #a16207); }
+.token.blue { background: radial-gradient(circle at 35% 35%, #60a5fa, #1d4ed8); }
+
+.token.movable {
+    animation: tokenGlow 0.8s infinite alternate;
+    z-index: 20;
+}
+
+@keyframes tokenGlow {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.9), 0 3px 6px rgba(0, 0, 0, 0.4); }
+    100% { transform: scale(1.28); box-shadow: 0 0 0 7px rgba(255, 255, 255, 0), 0 6px 14px rgba(0, 0, 0, 0.5); }
+}
+
+.controls {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.dice-area {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 6px 14px;
+    backdrop-filter: blur(12px);
+}
+
+.player-info {
+    font-size: 0.8rem;
+}
+.player-info .label { opacity: 0.6; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.player-info .val { font-weight: 800; font-size: 0.9rem; }
+
+.dice {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(145deg, #ffffff, #e2e8f0);
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35), inset 0 2px 2px #ffffff;
+    transition: transform 0.1s ease;
+}
+
+.dice:active { transform: scale(0.92); }
+
+.dice.rolling {
+    animation: roll 0.5s ease-in-out;
+}
+
+@keyframes roll {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.12); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #0f172a;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.status-bar {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    height: 20px;
+    font-weight: 500;
+}
+
+.btn-reset {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-reset:hover { background: rgba(255, 255, 255, 0.2); }
+.btn-reset:active { transform: scale(0.95); }
+
+/* Landscape optimization */
+@media (min-aspect-ratio: 1/1) and (max-height: 500px) {
+    .app-container {
+        flex-direction: row;
+        max-width: 780px;
+        padding: 8px 16px;
+        gap: 16px;
+    }
+    .board-wrap {
+        width: min(88vh, 360px);
+        height: min(88vh, 360px);
+    }
+    .controls {
+        width: 220px;
+        justify-content: center;
+        gap: 10px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo">LUDO <span>KING</span></div>
+        <div class="turn-badge" id="turnBadge">Giliran: 🔴 Merah</div>
+    </header>
+
+    <div class="board-wrap">
+        <div class="board" id="board">
+            <div class="home red"><div class="home-box"><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div></div></div>
+            <div class="home green"><div class="home-box"><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div></div></div>
+            <div class="home yellow"><div class="home-box"><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div></div></div>
+            <div class="home blue"><div class="home-box"><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div><div class="home-spot"></div></div></div>
+
+            <div class="cells" id="cells"></div>
+            <div class="center"><div class="center-inner"></div></div>
+
+            <!-- Tokens -->
+            <div class="token red" data-color="red" data-index="0" data-pos="-1"></div>
+            <div class="token red" data-color="red" data-index="1" data-pos="-1"></div>
+            <div class="token red" data-color="red" data-index="2" data-pos="-1"></div>
+            <div class="token red" data-color="red" data-index="3" data-pos="-1"></div>
+
+            <div class="token green" data-color="green" data-index="0" data-pos="-1"></div>
+            <div class="token green" data-color="green" data-index="1" data-pos="-1"></div>
+            <div class="token green" data-color="green" data-index="2" data-pos="-1"></div>
+            <div class="token green" data-color="green" data-index="3" data-pos="-1"></div>
+
+            <div class="token yellow" data-color="yellow" data-index="0" data-pos="-1"></div>
+            <div class="token yellow" data-color="yellow" data-index="1" data-pos="-1"></div>
+            <div class="token yellow" data-color="yellow" data-index="2" data-pos="-1"></div>
+            <div class="token yellow" data-color="yellow" data-index="3" data-pos="-1"></div>
+
+            <div class="token blue" data-color="blue" data-index="0" data-pos="-1"></div>
+            <div class="token blue" data-color="blue" data-index="1" data-pos="-1"></div>
+            <div class="token blue" data-color="blue" data-index="2" data-pos="-1"></div>
+            <div class="token blue" data-color="blue" data-index="3" data-pos="-1"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="dice-area">
+            <div class="player-info">
+                <div class="label">Pemain</div>
+                <div class="val" id="playerVal">🔴 Merah</div>
+            </div>
+
+            <button class="dice" id="diceBtn" aria-label="Lempar dadu"></button>
+
+            <div class="player-info" style="text-align: right;">
+                <div class="label">Angka Dadu</div>
+                <div class="val" id="diceVal">-</div>
+            </div>
+        </div>
+
+        <div class="status-bar" id="status">Klik dadu untuk memulai 🎲</div>
+        <button class="btn-reset" onclick="resetGame()">↻ Reset Game</button>
+    </div>
+</div>
+
+<script>
+const cellsContainer = document.getElementById('cells');
+
+for (let i = 0; i < 225; i++) {
+    const row = Math.floor(i / 15);
+    const col = i % 15;
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+
+    const isH = row >= 6 && row <= 8;
+    const isV = col >= 6 && col <= 8;
+
+    if (isH || isV) {
+        if (row === 7 && col >= 1 && col <= 5) cell.classList.add('red');
+        else if (col === 7 && row >= 1 && row <= 5) cell.classList.add('green');
+        else if (row === 7 && col >= 9 && col <= 13) cell.classList.add('yellow');
+        else if (col === 7 && row >= 9 && row <= 13) cell.classList.add('blue');
+        
+        // Add Safe Stars
+        if ((row === 6 && col === 1) || (row === 2 && col === 8) || 
+            (row === 8 && col === 13) || (row === 12 && col === 6)) {
+            cell.classList.add('safe');
+        }
+    }
+    cellsContainer.appendChild(cell);
+}
+
+const diceBtn = document.getElementById('diceBtn');
+function renderDice(num) {
+    diceBtn.innerHTML = '';
+    const dotsMap = {
+        1: [[50,50]],
+        2: [[25,25],[75,75]],
+        3: [[25,25],[50,50],[75,75]],
+        4: [[25,25],[75,25],[25,75],[75,75]],
+        5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+        6: [[25,20],[25,50],[25,80],[75,20],[75,50],[75,80]]
+    };
+    (dotsMap[num] || []).forEach(([x, y]) => {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        d.style.left = x + '%';
+        d.style.top = y + '%';
+        diceBtn.appendChild(d);
+    });
+}
+renderDice(1);
+
+const colors = ['red', 'green', 'yellow', 'blue'];
+const names = { red: '🔴 Merah', green: '🟢 Hijau', yellow: '🟡 Kuning', blue: '🔵 Biru' };
+
+// Precision positioning for home coordinates
+const homePositions = {
+    red: [[9.5, 9.5], [23.8, 9.5], [9.5, 23.8], [23.8, 23.8]],
+    green: [[69.5, 9.5], [83.8, 9.5], [69.5, 23.8], [83.8, 23.8]],
+    yellow: [[69.5, 69.5], [83.8, 69.5], [69.5, 83.8], [83.8, 83.8]],
+    blue: [[9.5, 69.5], [23.8, 69.5], [9.5, 83.8], [23.8, 83.8]]
+};
+
+// Paths per color starting from their respective entrance
+const paths = {
+    red: [
+        [6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],
+        [1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
+        [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+        [14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
+        [7,1],[7,2],[7,3],[7,4],[7,5],[7,6]
+    ],
+    green: [
+        [1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
+        [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+        [14,7],[14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
+        [7,0],[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],
+        [1,7],[2,7],[3,7],[4,7],[5,7],[6,7]
+    ],
+    yellow: [
+        [8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],
+        [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
+        [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],
+        [1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],
+        [7,13],[7,12],[7,11],[7,10],[7,9],[7,8]
+    ],
+    blue: [
+        [13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],
+        [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],
+        [1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],
+        [8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],
+        [13,7],[12,7],[11,7],[10,7],[9,7],[8,7]
+    ]
+};
+
+let turnIndex = 0;
+let diceVal = 0;
+let isRolling = false;
+
+function setTokenPos(token, row, col) {
+    // 15x15 grid centered alignment offset
+    const l = (col / 15) * 100 + 0.23;
+    const t = (row / 15) * 100 + 0.23;
+    token.style.left = l + '%';
+    token.style.top = t + '%';
+}
+
+function initTokens() {
+    document.querySelectorAll('.token').forEach(token => {
+        const c = token.dataset.color;
+        const idx = parseInt(token.dataset.index);
+        token.dataset.pos = "-1";
+        const [l, t] = homePositions[c][idx];
+        token.style.left = l + '%';
+        token.style.top = t + '%';
+        token.classList.remove('movable');
+    });
+}
+initTokens();
+
+function updateTurnUI() {
+    const c = colors[turnIndex];
+    document.getElementById('turnBadge').textContent = 'Giliran: ' + names[c];
+    document.getElementById('playerVal').textContent = names[c];
+}
+
+function nextTurn() {
+    turnIndex = (turnIndex + 1) % colors.length;
+    updateTurnUI();
+}
+
+diceBtn.addEventListener('click', () => {
+    if (isRolling) return;
+    isRolling = true;
+    diceBtn.classList.add('rolling');
+    document.getElementById('status').textContent = 'Meliuk dadu... 🎲';
+
+    let cnt = 0;
+    const interval = setInterval(() => {
+        renderDice(Math.floor(Math.random() * 6) + 1);
+        cnt++;
+        if (cnt > 7) {
+            clearInterval(interval);
+            diceVal = Math.floor(Math.random() * 6) + 1;
+            renderDice(diceVal);
+            document.getElementById('diceVal').textContent = diceVal;
+            diceBtn.classList.remove('rolling');
+            isRolling = false;
+
+            checkMovePossibilities();
+        }
+    }, 60);
+});
+
+function checkMovePossibilities() {
+    const c = colors[turnIndex];
+    const tokens = document.querySelectorAll(`.token[data-color="${c}"]`);
+    let canMove = false;
+
+    tokens.forEach(t => {
+        const p = parseInt(t.dataset.pos);
+        const pathLen = paths[c].length;
+        if ((p < 0 && diceVal === 6) || (p >= 0 && p + diceVal < pathLen)) {
+            t.classList.add('movable');
+            canMove = true;
+        }
+    });
+
+    if (!canMove) {
+        document.getElementById('status').textContent = 'Tidak ada bidak yang bisa jalan.';
+        setTimeout(() => {
+            diceVal = 0;
+            document.getElementById('diceVal').textContent = '-';
+            nextTurn();
+        }, 1200);
+    } else {
+        document.getElementById('status').textContent = `${names[c]} dapat ${diceVal}! Pilih bidak.`;
+    }
+}
+
+document.querySelectorAll('.token').forEach(t => {
+    t.addEventListener('click', () => {
+        if (isRolling || !diceVal) return;
+        const c = t.dataset.color;
+        if (c !== colors[turnIndex]) return;
+
+        let p = parseInt(t.dataset.pos);
+        const pathLen = paths[c].length;
+
+        if (p < 0 && diceVal !== 6) return;
+
+        if (p < 0 && diceVal === 6) {
+            p = 0;
+        } else if (p >= 0) {
+            if (p + diceVal >= pathLen) return;
+            p += diceVal;
+        }
+
+        t.dataset.pos = p;
+        const [r, col] = paths[c][p];
+        setTokenPos(t, r, col);
+
+        document.querySelectorAll('.token').forEach(tk => tk.classList.remove('movable'));
+
+        if (diceVal === 6) {
+            document.getElementById('status').textContent = 'Dapat 6! Lempar lagi 🎉';
+            diceVal = 0;
+            document.getElementById('diceVal').textContent = '-';
+        } else {
+            diceVal = 0;
+            document.getElementById('diceVal').textContent = '-';
+            setTimeout(nextTurn, 400);
+        }
+    });
+});
+
+function resetGame() {
+    turnIndex = 0;
+    diceVal = 0;
+    isRolling = false;
+    document.getElementById('diceVal').textContent = '-';
+    renderDice(1);
+    initTokens();
+    updateTurnUI();
+    document.getElementById('status').textContent = 'Game di-reset. Lempar dadu! 🎲';
+}
+</script>
+</body>
+</html>
